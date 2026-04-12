@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — BOI Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Dashboard</h2>
+    {% if has_data and months %}
+    <div class="month-selector">
+        <label for="month-select">Month:</label>
+        <select id="month-select" onchange="window.location.href='?month=' + this.value">
+            {% for m in months %}
+            <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+</div>
+
+{% if not has_data %}
+<div class="empty-state">
+    <div class="empty-icon">📂</div>
+    <h3>No expenses yet</h3>
+    <p>Upload a Bank of Ireland statement or expense screenshot to get started.</p>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload Statement</a>
+</div>
+{% else %}
+
+<div class="stats-grid">
+    <div class="stat-card stat-income">
+        <div class="stat-label">Income</div>
+        <div class="stat-value">€{{ "%.2f"|format(total_income) }}</div>
+    </div>
+    <div class="stat-card stat-spend">
+        <div class="stat-label">Spend</div>
+        <div class="stat-value">€{{ "%.2f"|format(total_spend) }}</div>
+    </div>
+    <div class="stat-card stat-net {% if net >= 0 %}stat-positive{% else %}stat-negative{% endif %}">
+        <div class="stat-label">Net</div>
+        <div class="stat-value">€{{ "%.2f"|format(net) }}</div>
+    </div>
+    <div class="stat-card stat-txns">
+        <div class="stat-label">Transactions</div>
+        <div class="stat-value">{{ total_txns }}</div>
+    </div>
+</div>
+
+{% if categories %}
+<div class="card">
+    <h3>Spend by Category</h3>
+    <div class="category-bars">
+        {% for cat in categories %}
+        <div class="category-row">
+            <div class="category-info">
+                <span class="category-name">{{ cat.name }}</span>
+                <span class="category-amount">€{{ "%.2f"|format(cat.amount) }}</span>
+            </div>
+            <div class="bar-bg">
+                <div class="bar-fill" style="width: {{ cat.percent }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if recent %}
+<div class="card">
+    <h3>Recent Transactions</h3>
+    <table class="txn-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th class="text-right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in recent %}
+            <tr>
+                <td>{{ txn.date.strftime('%Y-%m-%d') if txn.date is not string else txn.date }}</td>
+                <td>{{ txn.description }}</td>
+                <td><span class="badge badge-{{ txn.category|lower|replace('/', '-')|replace(' ', '-') }}">{{ txn.category }}</span></td>
+                <td class="text-right {% if txn.amount < 0 %}text-red{% else %}text-green{% endif %}">
+                    €{{ "%.2f"|format(txn.amount|abs) }}
+                    {% if txn.amount >= 0 %}<span class="credit-arrow">↑</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="card-footer">
+        <a href="{{ url_for('transactions') }}">View all transactions →</a>
+    </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Summary — BOI Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Monthly Summary</h2>
+    {% if has_data and months %}
+    <div class="month-selector">
+        <label for="month-select">Month:</label>
+        <select id="month-select" onchange="window.location.href='?month=' + this.value">
+            {% for m in months %}
+            <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+</div>
+
+{% if not has_data %}
+<div class="empty-state">
+    <div class="empty-icon">📈</div>
+    <h3>No data for summaries</h3>
+    <p>Upload a statement to generate monthly summaries.</p>
+    <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload Statement</a>
+</div>
+{% else %}
+
+<div class="card summary-card">
+    <pre class="summary-content">{{ summary_md }}</pre>
+</div>
+
+{% endif %}
+{% endblock %}

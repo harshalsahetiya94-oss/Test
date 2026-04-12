@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Upload — BOI Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Upload Statements</h2>
+</div>
+
+<div class="card upload-card">
+    <form method="POST" enctype="multipart/form-data" id="upload-form">
+        <div class="upload-zone" id="drop-zone">
+            <div class="upload-icon">📄</div>
+            <h3>Drop files here or click to browse</h3>
+            <p>Supports Bank of Ireland PDF statements, expense screenshots (PNG, JPG, WebP)</p>
+            <input type="file" name="files" id="file-input" multiple
+                   accept=".pdf,.png,.jpg,.jpeg,.webp,.gif" hidden>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                Choose Files
+            </button>
+        </div>
+
+        <div id="file-list" class="file-list" hidden>
+            <h4>Selected Files</h4>
+            <ul id="file-names"></ul>
+            <button type="submit" class="btn btn-primary btn-lg" id="process-btn">
+                Process Files
+            </button>
+        </div>
+    </form>
+
+    <div id="processing-overlay" class="processing-overlay" hidden>
+        <div class="spinner"></div>
+        <p>Processing your files with Claude AI...</p>
+        <p class="processing-note">This may take 10-30 seconds per file.</p>
+    </div>
+</div>
+
+<div class="card info-card">
+    <h3>How it works</h3>
+    <ol class="how-it-works">
+        <li><strong>Upload</strong> — Drop your BOI PDF statement or a photo/screenshot of a receipt</li>
+        <li><strong>Extract</strong> — Claude AI reads the document and extracts every transaction</li>
+        <li><strong>Categorize</strong> — Transactions are auto-categorized (Groceries, Dining, Transport, etc.)</li>
+        <li><strong>Track</strong> — Duplicates are skipped, new transactions are added to your ledger</li>
+    </ol>
+</div>
+{% endblock %}
