@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Please select a file first.');
                 return;
             }
-            if (overlay) overlay.hidden = false;
+            if (overlay) overlay.classList.add('active');
         });
     }
 
