@@ -6,42 +6,55 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileNames = document.getElementById('file-names');
     const uploadForm = document.getElementById('upload-form');
     const overlay = document.getElementById('processing-overlay');
+    const chooseBtn = document.getElementById('choose-btn');
 
-    if (!dropZone) return;
+    if (!dropZone || !fileInput) return;
 
-    // Click to open file picker
-    dropZone.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'BUTTON') {
+    // "Choose Files" button opens file picker
+    if (chooseBtn) {
+        chooseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             fileInput.click();
-        }
+        });
+    }
+
+    // Clicking the drop zone (but not the button) also opens file picker
+    dropZone.addEventListener('click', (e) => {
+        if (e.target === chooseBtn || (chooseBtn && chooseBtn.contains(e.target))) return;
+        fileInput.click();
     });
 
     // Drag events
-    ['dragenter', 'dragover'].forEach(evt => {
-        dropZone.addEventListener(evt, (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
+    dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
     });
 
-    ['dragleave', 'drop'].forEach(evt => {
-        dropZone.addEventListener(evt, (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-        });
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
     });
 
     dropZone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        fileInput.files = dt.files;
-        showFileList(dt.files);
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        fileInput.files = e.dataTransfer.files;
+        showFileList(e.dataTransfer.files);
     });
 
+    // When files are chosen via picker
     fileInput.addEventListener('change', () => {
         showFileList(fileInput.files);
     });
 
     function showFileList(files) {
+        if (!fileList || !fileNames) return;
         if (files.length === 0) {
             fileList.hidden = true;
             return;
@@ -56,9 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
         fileList.hidden = false;
     }
 
-    // Show processing overlay on submit
+    // Only show spinner when form is actually submitted WITH files
     if (uploadForm) {
-        uploadForm.addEventListener('submit', () => {
+        uploadForm.addEventListener('submit', (e) => {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                e.preventDefault();
+                alert('Please select a file first.');
+                return;
+            }
             if (overlay) overlay.hidden = false;
         });
     }
