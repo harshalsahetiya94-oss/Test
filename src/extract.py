@@ -133,7 +133,7 @@ def extract_transactions(file_path: Path, client: anthropic.Anthropic | None = N
     content_block = _build_content_block(file_path)
 
     message = client.messages.create(
-        model="claude-3-5-haiku-20241022",
+        model="claude-haiku-4-5",
         max_tokens=8000,
         system=SYSTEM_PROMPT,
         messages=[
@@ -158,7 +158,7 @@ def extract_transactions(file_path: Path, client: anthropic.Anthropic | None = N
     except json.JSONDecodeError:
         # Retry with a stricter reminder
         retry_message = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-haiku-4-5",
             max_tokens=8000,
             system=SYSTEM_PROMPT,
             messages=[
