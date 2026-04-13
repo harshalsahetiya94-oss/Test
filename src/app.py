@@ -119,11 +119,15 @@ def dashboard():
 
 
 @app.route("/upload", methods=["GET", "POST"])
-@require_api_key
 def upload():
     """Upload and process statement PDFs or expense screenshots."""
     if request.method == "GET":
         return render_template("upload.html")
+
+    # Only require API key when actually processing files
+    if not get_api_key():
+        flash("Please add your Anthropic API key in Settings first.", "warning")
+        return redirect(url_for("settings"))
 
     files = request.files.getlist("files")
     if not files or all(f.filename == "" for f in files):
