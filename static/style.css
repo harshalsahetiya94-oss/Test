@@ -415,6 +415,18 @@ body {
     line-height: 1.7;
 }
 
+/* === Settings === */
+.key-status {
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.key-active { background: var(--green-bg); color: var(--green); border: 1px solid #a7f3d0; }
+.key-missing { background: var(--yellow-bg); color: var(--yellow); border: 1px solid #fde68a; }
+
+.key-status code { font-size: 0.85rem; }
+
 /* === Responsive === */
 @media (max-width: 768px) {
     .sidebar {

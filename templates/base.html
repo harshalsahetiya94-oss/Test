@@ -24,6 +24,9 @@
             <li><a href="{{ url_for('summary') }}" class="{% if request.endpoint == 'summary' %}active{% endif %}">
                 <span class="icon">📈</span> Summary
             </a></li>
+            <li><a href="{{ url_for('settings') }}" class="{% if request.endpoint == 'settings' %}active{% endif %}">
+                <span class="icon">🔑</span> Settings
+            </a></li>
         </ul>
     </nav>
 

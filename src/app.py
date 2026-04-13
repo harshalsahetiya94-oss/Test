@@ -4,9 +4,10 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+import anthropic
 import pandas as pd
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 from src.categorize import categorize_transactions
 from src.extract import SUPPORTED_EXTENSIONS, extract_transactions
@@ -19,6 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 INPUT_DIR = BASE_DIR / "input"
 OUTPUT_DIR = BASE_DIR / "output"
 LEDGER_PATH = OUTPUT_DIR / "expenses.csv"
+API_KEY_FILE = BASE_DIR / ".api_key"
 
 app = Flask(
     __name__,
@@ -26,6 +28,40 @@ app = Flask(
     static_folder=str(BASE_DIR / "static"),
 )
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "boi-expense-tracker-dev-key")
+
+
+def get_api_key() -> str | None:
+    """Get API key from env, file, or session."""
+    key = os.environ.get("ANTHROPIC_API_KEY")
+    if key and key != "sk-ant-xxxxx":
+        return key
+    if API_KEY_FILE.exists():
+        key = API_KEY_FILE.read_text().strip()
+        if key:
+            return key
+    return None
+
+
+def get_client() -> anthropic.Anthropic | None:
+    """Get an Anthropic client if API key is available."""
+    key = get_api_key()
+    if key:
+        return anthropic.Anthropic(api_key=key)
+    return None
+
+
+def require_api_key(f):
+    """Decorator to redirect to settings if no API key is configured."""
+    from functools import wraps
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not get_api_key():
+            flash("Please add your Anthropic API key first.", "warning")
+            return redirect(url_for("settings"))
+        return f(*args, **kwargs)
+
+    return decorated
 
 
 @app.route("/")
@@ -83,6 +119,7 @@ def dashboard():
 
 
 @app.route("/upload", methods=["GET", "POST"])
+@require_api_key
 def upload():
     """Upload and process statement PDFs or expense screenshots."""
     if request.method == "GET":
@@ -93,6 +130,7 @@ def upload():
         flash("No files selected.", "error")
         return redirect(url_for("upload"))
 
+    client = get_client()
     total_added = 0
     total_dupes = 0
     total_errors = 0
@@ -115,10 +153,10 @@ def upload():
 
         try:
             # Extract transactions
-            transactions = extract_transactions(save_path)
+            transactions = extract_transactions(save_path, client=client)
 
             # Categorize
-            transactions = categorize_transactions(transactions)
+            transactions = categorize_transactions(transactions, client=client)
 
             # Load ledger and append
             df = load_ledger(LEDGER_PATH)
@@ -214,6 +252,7 @@ def summary():
 
 
 @app.route("/recategorize", methods=["POST"])
+@require_api_key
 def recategorize():
     """Re-run categorization on the entire ledger."""
     df = load_ledger(LEDGER_PATH)
@@ -221,13 +260,37 @@ def recategorize():
         flash("No transactions to recategorize.", "warning")
         return redirect(url_for("dashboard"))
 
+    client = get_client()
     txns = df.to_dict("records")
-    txns = categorize_transactions(txns)
+    txns = categorize_transactions(txns, client=client)
     df = pd.DataFrame(txns)
     save_ledger(df, LEDGER_PATH)
 
     flash(f"Recategorized {len(txns)} transactions.", "success")
     return redirect(url_for("transactions"))
+
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    """API key settings page."""
+    if request.method == "POST":
+        api_key = request.form.get("api_key", "").strip()
+        if api_key:
+            # Save to file
+            API_KEY_FILE.write_text(api_key)
+            flash("API key saved successfully!", "success")
+            return redirect(url_for("dashboard"))
+        else:
+            flash("Please enter a valid API key.", "error")
+
+    has_key = get_api_key() is not None
+    # Mask the key for display
+    masked = ""
+    if has_key:
+        key = get_api_key()
+        masked = key[:10] + "..." + key[-4:] if len(key) > 14 else "****"
+
+    return render_template("settings.html", has_key=has_key, masked_key=masked)
 
 
 def main():

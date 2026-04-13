@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Settings — BOI Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Settings</h2>
+</div>
+
+<div class="card">
+    <h3>Anthropic API Key</h3>
+    <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+        Required to extract transactions from your statements using Claude AI.
+        Get your key from <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color: var(--primary-light);">console.anthropic.com</a>
+    </p>
+
+    {% if has_key %}
+    <div class="key-status key-active">
+        <span>Current key: <code>{{ masked_key }}</code></span>
+    </div>
+    {% else %}
+    <div class="key-status key-missing">
+        <span>No API key configured</span>
+    </div>
+    {% endif %}
+
+    <form method="POST" style="margin-top: 1rem;">
+        <div class="filter-group" style="margin-bottom: 1rem;">
+            <label for="api_key">{{ "Update" if has_key else "Enter" }} API Key</label>
+            <input type="password" name="api_key" id="api_key"
+                   placeholder="sk-ant-..."
+                   style="width: 100%; padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; font-family: monospace;">
+        </div>
+        <button type="submit" class="btn btn-primary">Save API Key</button>
+    </form>
+</div>
+
+<div class="card info-card">
+    <h3>Privacy & Cost</h3>
+    <ul style="padding-left: 1.2rem; font-size: 0.9rem; line-height: 1.8;">
+        <li>Your API key is stored locally on this machine only</li>
+        <li>PDFs and images stay on your computer — only document content is sent to the API</li>
+        <li>Each statement costs roughly <strong>1-3 cents</strong> to process</li>
+        <li>Uses Claude Sonnet for extraction and categorization</li>
+    </ul>
+</div>
+{% endblock %}

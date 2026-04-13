@@ -1,5 +1,6 @@
 # Environment
 .env
+.api_key
 
 # Input PDFs
 input/*.pdf
