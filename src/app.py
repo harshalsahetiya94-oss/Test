@@ -30,6 +30,32 @@ app = Flask(
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "boi-expense-tracker-dev-key")
 
 
+class _PrefixMiddleware:
+    """Mount the Flask app at a URL prefix.
+
+    Set URL_PREFIX=/finance and Flask will:
+      - treat incoming /finance/* requests as if they were /* (so existing routes match)
+      - generate links via url_for() that include the /finance prefix
+    Useful when this app is reverse-proxied behind a parent app (Home Ops).
+    """
+
+    def __init__(self, app, prefix: str):
+        self.app = app
+        self.prefix = prefix.rstrip("/")
+
+    def __call__(self, environ, start_response):
+        path = environ.get("PATH_INFO", "")
+        if self.prefix and path.startswith(self.prefix):
+            environ["PATH_INFO"] = path[len(self.prefix):] or "/"
+            environ["SCRIPT_NAME"] = self.prefix
+        return self.app(environ, start_response)
+
+
+_url_prefix = os.environ.get("URL_PREFIX", "").strip()
+if _url_prefix:
+    app.wsgi_app = _PrefixMiddleware(app.wsgi_app, _url_prefix)
+
+
 def get_api_key() -> str | None:
     """Get API key from env, file, or session."""
     key = os.environ.get("ANTHROPIC_API_KEY")
