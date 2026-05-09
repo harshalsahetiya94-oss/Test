@@ -1,0 +1,14 @@
+.git
+.gitignore
+.DS_Store
+__pycache__
+*.pyc
+.venv
+venv
+env
+.env
+.env.example
+.api_key
+input/
+output/
+*.log
